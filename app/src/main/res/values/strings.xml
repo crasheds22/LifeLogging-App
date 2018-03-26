@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">LifeLogging</string>
+
+    <string name="take_A_Photo">Photo</string>
+    <string name="view_in_map">Map View</string>
+    <string name="view_in_AR">AR View</string>
+</resources>
