@@ -1,3 +1,4 @@
+//MainActvity.java: This is the main program for out app
 package com.example.lifelogging;
 
 import android.content.Intent;
