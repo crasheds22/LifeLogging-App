@@ -63,8 +63,8 @@ import javax.microedition.khronos.opengles.GL10;
  * ARCore API. The application will display any detected planes and will allow the user to tap on a
  * plane to place a 3d model of the Android robot.
  */
-public class ViewInArActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
-    private static final String TAG = ViewInArActivity.class.getSimpleName();
+public class ViewInARActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
+    private static final String TAG = ViewInARActivity.class.getSimpleName();
 
     // Rendering. The Renderers are created here, and initialized when the GL surface is created.
     private GLSurfaceView surfaceView;
@@ -390,7 +390,7 @@ public class ViewInArActivity extends AppCompatActivity implements GLSurfaceView
     private void showSnackbarMessage(String message, boolean finishOnDismiss) {
         messageSnackbar =
                 Snackbar.make(
-                        ViewInArActivity.this.findViewById(android.R.id.content),
+                        ViewInARActivity.this.findViewById(android.R.id.content),
                         message,
                         Snackbar.LENGTH_INDEFINITE);
         messageSnackbar.getView().setBackgroundColor(0xbf323232);
