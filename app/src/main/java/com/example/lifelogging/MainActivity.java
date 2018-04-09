@@ -1,4 +1,4 @@
-//MainActvity.java: This is the main program for out app
+//MainActvity.java: This is the main program for our app
 package com.example.lifelogging;
 
 import android.content.Intent;
