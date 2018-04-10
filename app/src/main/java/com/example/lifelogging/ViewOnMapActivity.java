@@ -128,6 +128,7 @@ public class ViewOnMapActivity extends AppCompatActivity implements OnMapReadyCa
         return false;
     }
 
+    //
     //initalize map
     private void initMap(){
         Log.d(TAG, "initMap: Intializing Map");
