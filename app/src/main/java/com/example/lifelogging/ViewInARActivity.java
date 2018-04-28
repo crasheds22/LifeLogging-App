@@ -92,7 +92,7 @@ public class ViewInARActivity extends AppCompatActivity implements GLSurfaceView
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_view_in_ar);
         surfaceView = findViewById(R.id.surfaceview);
         displayRotationHelper = new com.example.lifelogging.ARHelper.DisplayRotationHelper(/*context=*/ this);
 
