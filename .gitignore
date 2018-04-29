@@ -1,0 +1,18 @@
+<<<<<<< HEAD
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+=======
+
+*.iml
+*.xml
+*.bin
+*.lock
+*.properties
+>>>>>>> 58b5fb649753f3e4dd2ef2c886b53a27d7aceb8f
