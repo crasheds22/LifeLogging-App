@@ -5,5 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.lifelogging.PhotoActivity">
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/get_image"
+            android:layout_centerHorizontal="true"/>
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_centerInParent="true"
+            android:id="@+id/image"/>
 
 </android.support.constraint.ConstraintLayout>
