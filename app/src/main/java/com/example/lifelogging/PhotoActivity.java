@@ -30,7 +30,9 @@ public class PhotoActivity extends AppCompatActivity {
 
     public static final int REQUEST_IMAGE = 100;
     public static final int REQUEST_PERMISSION = 200;
+
     private String imageFilePath = "";
+    String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,11 +42,12 @@ public class PhotoActivity extends AppCompatActivity {
         button = (Button)findViewById(R.id.button);
         imageView = findViewById(R.id.image);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_PERMISSION);
-        }
+
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, PERMISSIONS,
+                        REQUEST_PERMISSION);
+            }
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,13 +56,6 @@ public class PhotoActivity extends AppCompatActivity {
             }
         });
 
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openCameraIntent();
-            }
-        });
 
     }
 
@@ -108,6 +104,7 @@ public class PhotoActivity extends AppCompatActivity {
                 Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
             }
         }
+
     }
 
     //savefile to lifelogging app directory internalstorage>android>data>com.example.lifelogging>files>Pictures(can change this to another location)
