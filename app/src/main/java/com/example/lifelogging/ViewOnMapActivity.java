@@ -1,12 +1,18 @@
 
 package com.example.lifelogging;
 
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
@@ -43,11 +49,13 @@ public class ViewOnMapActivity extends AppCompatActivity
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    private boolean mLocationPermissionGranted;
+    private boolean mLocationPermissionGranted = false;
 
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
     private Location mLastKnownLocation;
+
+    LocationManager locationManager;
 
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
@@ -103,16 +111,25 @@ public class ViewOnMapActivity extends AppCompatActivity
      */
     @Override
     public void onMapReady(GoogleMap map) {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
         mMap = map;
 
-        // Prompt the user for permission.
-        getLocationPermission();
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+        {
+            buildAlertMessageNoGps();
+        }
+        else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
-        // Turn on the My Location layer and the related control on the map.
-        updateLocationUI();
+            // Prompt the user for permission.
+            getLocationPermission();
 
-        // Get the current location of the device and set the position of the map.
-        getDeviceLocation();
+            // Turn on the My Location layer and the related control on the map.
+            updateLocationUI();
+
+            // Get the current location of the device and set the position of the map.
+            getDeviceLocation();
+        }
 
         UiSettings mapUiSettings = mMap.getUiSettings();
         mapUiSettings.setZoomControlsEnabled(true);
@@ -138,9 +155,6 @@ public class ViewOnMapActivity extends AppCompatActivity
 
     }
 
-    /**
-     * Gets the current location of the device, and positions the map's camera.
-     */
     private void getDeviceLocation() {
         /*
          * Get the best and most recent location of the device, which may be null in rare
@@ -154,10 +168,14 @@ public class ViewOnMapActivity extends AppCompatActivity
                     public void onComplete(@NonNull Task<Location> task) {
                         if (task.isSuccessful()) {
                             // Set the map's camera position to the current location of the device.
-                            mLastKnownLocation = task.getResult();
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                    new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                            mLastKnownLocation = (Location) task.getResult();
+                            if (null != mLastKnownLocation) {
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                        new LatLng(mLastKnownLocation.getLatitude(),
+                                                mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                            } else {
+                                mMap.setMyLocationEnabled(true);
+                            }
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
@@ -186,11 +204,13 @@ public class ViewOnMapActivity extends AppCompatActivity
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "getLocationPermission: Permission granted");
             mLocationPermissionGranted = true;
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            Log.d(TAG, "getLocationPermission: Need to request permission");
         }
     }
 
@@ -219,13 +239,16 @@ public class ViewOnMapActivity extends AppCompatActivity
      */
     private void updateLocationUI() {
         if (mMap == null) {
+            Log.d(TAG, "updateLocationUI: Map is null");
             return;
         }
         try {
             if (mLocationPermissionGranted) {
+                Log.d(TAG, "updateLocationUI: Setting Location");
                 mMap.setMyLocationEnabled(true);
                 mMap.getUiSettings().setMyLocationButtonEnabled(true);
             } else {
+                Log.d(TAG, "updateLocationUI: Creating null for mLastKnownLocation");
                 mMap.setMyLocationEnabled(false);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 mLastKnownLocation = null;
@@ -259,6 +282,25 @@ public class ViewOnMapActivity extends AppCompatActivity
         return false;
     }
 
+    protected void buildAlertMessageNoGps() {
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Please Turn ON your GPS Connection")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                        finish();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
 
 
 }
