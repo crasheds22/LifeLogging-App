@@ -23,9 +23,4 @@ public class MainActivity extends AppCompatActivity {
         Intent mapIntent = new Intent(this, ViewOnMapActivity.class);
         startActivity(mapIntent);
     }
-
-    public void viewInAR(View view) {
-        Intent arIntent = new Intent(this, ViewInARActivity.class);
-        startActivity(arIntent);
-    }
 }

@@ -47,16 +47,6 @@
         <activity android:name=".ViewOnMapActivity"
                   android:parentActivityName=".MainActivity"/>
 
-        <activity
-            android:name=".ViewInARActivity"
-            android:label="View in AR"
-            android:configChanges="orientation|screenSize"
-            android:exported="true"
-            android:screenOrientation="locked"
-            android:parentActivityName=".MainActivity"/>
-
-        <!--meta-data android:name="com.google.ar.core" android:value="required" /-->
-
         <provider
             android:authorities="${applicationId}.provider"
             android:name="android.support.v4.content.FileProvider"
