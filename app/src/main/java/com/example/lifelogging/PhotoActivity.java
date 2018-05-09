@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -12,16 +11,26 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.io.FileWriter;
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.Tag;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static android.os.Environment.DIRECTORY_PICTURES;
+
 
 public class PhotoActivity extends AppCompatActivity {
 
@@ -31,15 +40,25 @@ public class PhotoActivity extends AppCompatActivity {
     public static final int REQUEST_IMAGE = 100;
     public static final int REQUEST_PERMISSION = 200;
 
+
     private String imageFilePath = "";
+
+    String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo);
 
-        button = (Button)findViewById(R.id.button);
+        button = (Button) findViewById(R.id.button);
         imageView = findViewById(R.id.image);
+
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS,
+                    REQUEST_PERMISSION);
+        }
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,12 +78,11 @@ public class PhotoActivity extends AppCompatActivity {
             File photoFile = null;
             try {
                 photoFile = createImageFile();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 return;
             }
-            Uri photoUri = FileProvider.getUriForFile(this, getPackageName() +".provider", photoFile);
+            Uri photoUri = FileProvider.getUriForFile(this, getPackageName() + ".provider", photoFile);
             pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
             startActivityForResult(pictureIntent, REQUEST_IMAGE);
         }
@@ -78,10 +96,14 @@ public class PhotoActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE) {
             if (resultCode == RESULT_OK) {
                 imageView.setImageURI(Uri.parse(imageFilePath));
-            }
-            else if (resultCode == RESULT_CANCELED) {
+            } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "Operation canceled", Toast.LENGTH_SHORT).show();
             }
+        }
+        try {
+            getDirectoryFiles();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -100,11 +122,11 @@ public class PhotoActivity extends AppCompatActivity {
     }
 
     //savefile to lifelogging app directory internalstorage>android>data>com.example.lifelogging>files>Pictures(can change this to another location)
-    private File createImageFile() throws IOException{
+    private File createImageFile() throws IOException {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String imageFileName = "IMG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File storageDir = getExternalFilesDir(DIRECTORY_PICTURES);
         File image = File.createTempFile(imageFileName, ".jpg", storageDir);
         imageFilePath = image.getAbsolutePath();
 
@@ -112,4 +134,84 @@ public class PhotoActivity extends AppCompatActivity {
     }
 
 
+
+
+
+    //pass from directory loop, get tags lat and long trim and convert from dms to degrees return string;
+    private String printImageTags(String file) throws Exception {
+        Metadata metadata = ImageMetadataReader.readMetadata(new File(file));
+        String lat = null;
+        String lon = null;
+        double latd, latm, lats;
+        double lond, lonm, lons;
+        double latfinal = 0, lonfinal=0;
+        String latlon = null;
+
+        String pattern = "^([NSEW])?(-)?(\\d+(?:\\.\\d+)?)[Â°Âº:d\\s]\\s?(?:(\\d+(?:\\.\\d+)?)['â€™â€˜â€²:]\\s?(?:(\\d{1,2}(?:\\.\\d+)?)(?:\"|â€³|â€™â€™|'')?)?)?\\s?([NSEW])?";
+        Pattern r = Pattern.compile(pattern);
+        //get gps metadata
+        for (Directory directory : metadata.getDirectories()) {
+            for (Tag tag : directory.getTags()) {
+                String tagName = tag.getTagName();
+                String desc = tag.getDescription();
+                switch (tagName) {
+                    case "GPS Latitude":
+                        lat = desc;
+                        break;
+                    case "GPS Longitude":
+                        lon = desc;
+                        break;
+                }
+            }
+        }
+        //strip unwanted data and convert.
+        Matcher m = r.matcher(lat);
+        if (m.find( )) {
+            latd = Double.parseDouble(m.group(3));
+            latm = Double.parseDouble(m.group(4));
+            lats = Double.parseDouble(m.group(5));
+
+            latfinal = latd +((latm/60)+(lats/3600));
+        }
+
+        Matcher x = r.matcher(lon);
+        if (x.find( )) {
+            lond = Double.parseDouble(x.group(3));
+            lonm = Double.parseDouble(x.group(4));
+            lons = Double.parseDouble(x.group(5));
+
+            lonfinal = lond +((lonm/60)+(lons/3600));
+        }
+
+        latlon = Double.toString(latfinal) +","+ Double.toString(lonfinal);
+
+        return latlon;
+
+    }
+
+
+    //iterates through all picture files, getting gps meta data and creating json file.
+    private void getDirectoryFiles() throws Exception {
+
+        String latlong = null;
+        String output = "{\"type\":\"FeatureCollection\",\"features\":[";
+
+        //loopthru each img file in folder get metadata, write to string in geojson format
+        File[] files = new File("/storage/emulated/0/Android/data/com.example.lifelogging/files/Pictures").listFiles();
+        //If this pathname does not denote a directory, then listFiles() returns null.
+        for (File file : files) {
+            if (file.isFile()) {
+                latlong = printImageTags(file.getAbsolutePath());
+                output += "{\"type\":\"Feature\",\"properties\":{\"name\":\"+"+file.getName()+"+\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":["+latlong+"]}},";
+            }
+        }
+        output.substring(0, output.length()-1);
+        output += "]}";
+
+        //writefile
+        try (FileWriter filew = new FileWriter("/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson")) {
+            filew.write(output);
+            Log.d("PhotoActivity", output); //testlog
+        }
+    }
 }
