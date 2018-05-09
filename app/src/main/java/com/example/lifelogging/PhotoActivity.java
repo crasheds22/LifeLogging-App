@@ -195,10 +195,10 @@ public class PhotoActivity extends AppCompatActivity {
         for (File file : files) {
             if (file.isFile()) {
                 latlong = printImageTags(file.getAbsolutePath());
-                output += "{\"type\":\"Feature\",\"properties\":{\"name\":\"+"+file.getName()+"+\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":["+latlong+"]}},";
+                output += "{\"type\":\"Feature\",\"properties\":{\"name\":\""+file.getName()+"\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":["+latlong+"]}},";
             }
         }
-        output.substring(0, output.length()-1);
+        output = output.substring(0, output.length()-1);
         output += "]}";
 
         //writefile
