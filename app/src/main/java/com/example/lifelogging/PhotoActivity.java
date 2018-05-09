@@ -43,7 +43,6 @@ public class PhotoActivity extends AppCompatActivity {
 
     private String imageFilePath = "";
 
-    String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,12 +52,6 @@ public class PhotoActivity extends AppCompatActivity {
         button = (Button) findViewById(R.id.button);
         imageView = findViewById(R.id.image);
 
-
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, PERMISSIONS,
-                    REQUEST_PERMISSION);
-        }
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
