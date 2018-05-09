@@ -32,7 +32,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     //Maps Dependencies - Google Play Services
-    compile "com.google.android.gms:play-services-maps:15.0.1"
-    compile "com.google.android.gms:play-services-location:15.0.1"
+    compile 'com.google.android.gms:play-services:11.4.0'
 
 }
