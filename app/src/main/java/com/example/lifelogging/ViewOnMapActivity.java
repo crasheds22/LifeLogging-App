@@ -36,6 +36,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -207,10 +209,10 @@ public class ViewOnMapActivity extends AppCompatActivity
         String ret = "";
 
         try {
-            InputStream inputStream = openFileInput("\"/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson\"");
+            FileInputStream fis = new FileInputStream(new File("/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson"));
 
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            if ( fis != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(fis);
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
                 String receiveString = "";
                 StringBuilder stringBuilder = new StringBuilder();
@@ -219,7 +221,7 @@ public class ViewOnMapActivity extends AppCompatActivity
                     stringBuilder.append(receiveString);
                 }
 
-                inputStream.close();
+                fis.close();
                 ret = stringBuilder.toString();
             }
         }
