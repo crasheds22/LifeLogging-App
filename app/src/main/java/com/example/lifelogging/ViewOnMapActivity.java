@@ -1,15 +1,18 @@
 
 package com.example.lifelogging;
 
-import android.*;
 import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
@@ -20,12 +23,27 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.maps.android.geojson.GeoJsonFeature;
+import com.google.maps.android.geojson.GeoJsonLayer;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 
-public class ViewOnMapActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class ViewOnMapActivity extends AppCompatActivity
+        implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -41,11 +59,29 @@ public class ViewOnMapActivity extends AppCompatActivity implements OnMapReadyCa
                     Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
-            mMap.setMyLocationEnabled(true);
-            mMap.getUiSettings().setMyLocationButtonEnabled(false);
 
+            UiSettings mapUiSettings = mMap.getUiSettings();
+            mapUiSettings.setZoomControlsEnabled(true);
+
+            mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+            mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+
+
+            GeoJsonLayer layer;
+            try {
+                String str = readFromFile();
+                JSONObject js = new JSONObject(str);
+                layer = new GeoJsonLayer(mMap,js);
+                addGeoJsonLayerToMap(layer);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
+
+
 
     private static final String TAG = "MapActivity";
 
@@ -157,5 +193,43 @@ public class ViewOnMapActivity extends AppCompatActivity implements OnMapReadyCa
         }
     }
 
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        return false;
+    }
+
+    private void addGeoJsonLayerToMap(GeoJsonLayer layer) {
+        layer.addLayerToMap();
+    }
+
+    private String readFromFile() {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = openFileInput("\"/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson\"");
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
 
 }
