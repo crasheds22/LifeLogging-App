@@ -233,6 +233,8 @@ public class ViewOnMapActivity extends AppCompatActivity
         // Iterate over all the features stored in the layer
         for (GeoJsonFeature feature : layer.getFeatures()) {
 
+            String img = feature.getProperty("name");
+
             // Get the icon for the feature
             BitmapDescriptor pointIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
 
@@ -241,6 +243,9 @@ public class ViewOnMapActivity extends AppCompatActivity
 
             // Set options for the point style
             pointStyle.setIcon(pointIcon);
+            pointStyle.setTitle(img);
+            pointStyle.setSnippet(img);
+
 
             // Assign the point style to the feature
             feature.setPointStyle(pointStyle);
