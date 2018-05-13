@@ -32,8 +32,10 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     //Maps Dependencies - Google Play Services
-    compile 'com.google.android.gms:play-services:11.4.0'
-    compile 'com.google.maps.android:android-maps-utils:0.4+'
+    implementation 'com.google.android.gms:play-services-maps:11.4.0'
+    implementation 'com.google.android.gms:play-services-tasks:11.4.0'
+    implementation 'com.google.android.gms:play-services-location:11.4.0'
+    implementation 'com.google.maps.android:android-maps-utils:0.5+'
 
     //metadata and geodata dependancies
     compile 'com.googlecode.json-simple:json-simple:1.1.1' exclude group: 'org.hamcrest', module: 'hamcrest-core'

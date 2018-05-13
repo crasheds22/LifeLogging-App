@@ -2,21 +2,16 @@
 package com.example.lifelogging;
 
 import android.Manifest;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -24,24 +19,26 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.maps.android.geojson.GeoJsonFeature;
-import com.google.maps.android.geojson.GeoJsonLayer;
+import com.google.maps.android.data.Feature;
+import com.google.maps.android.data.geojson.GeoJsonFeature;
+import com.google.maps.android.data.geojson.GeoJsonLayer;
+import com.google.maps.android.data.geojson.GeoJsonPointStyle;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+
 
 
 public class ViewOnMapActivity extends AppCompatActivity
@@ -70,16 +67,16 @@ public class ViewOnMapActivity extends AppCompatActivity
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
-
-            GeoJsonLayer layer;
+            String str = readFromFile();
+            JSONObject js = null;
             try {
-                String str = readFromFile();
-                JSONObject js = new JSONObject(str);
-                layer = new GeoJsonLayer(mMap,js);
-                addGeoJsonLayerToMap(layer);
+                js = new JSONObject(str);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+            retrieveFileFromResource(js);
+
         }
     }
 
@@ -200,8 +197,52 @@ public class ViewOnMapActivity extends AppCompatActivity
         return false;
     }
 
+    private void retrieveFileFromResource(JSONObject js) {
+        String mLogTag = "ViewOnMapActivity";
+
+        if (js != null) {
+            GeoJsonLayer layer = new GeoJsonLayer(mMap, js);
+            addGeoJsonLayerToMap(layer);
+        }
+
+
+    }
+
     private void addGeoJsonLayerToMap(GeoJsonLayer layer) {
+
+        addColorsToMarkers(layer);
         layer.addLayerToMap();
+
+        layer.setOnFeatureClickListener(new GeoJsonLayer.GeoJsonOnFeatureClickListener() {
+            @Override
+            public void onFeatureClick(Feature feature) {
+                Toast.makeText(ViewOnMapActivity.this,
+                        "Feature clicked: " + feature.getProperty("title"),
+                        Toast.LENGTH_SHORT).show();
+            }
+
+        });
+
+    }
+
+    private void addColorsToMarkers(GeoJsonLayer layer) {
+
+        // Iterate over all the features stored in the layer
+        for (GeoJsonFeature feature : layer.getFeatures()) {
+
+            // Get the icon for the feature
+            BitmapDescriptor pointIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+
+            // Create a new point style
+            GeoJsonPointStyle pointStyle = new GeoJsonPointStyle();
+
+            // Set options for the point style
+            pointStyle.setIcon(pointIcon);
+
+            // Assign the point style to the feature
+            feature.setPointStyle(pointStyle);
+
+        }
     }
 
     private String readFromFile() {
