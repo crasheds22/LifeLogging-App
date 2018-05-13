@@ -14,52 +14,84 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.drew.imaging.ImageMetadataReader;
-import com.drew.metadata.Directory;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.Tag;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Scanner;
+import java.util.stream.Stream;
+
+import im.delight.android.location.SimpleLocation;
 
 import static android.os.Environment.DIRECTORY_PICTURES;
 
 
-public class PhotoActivity extends AppCompatActivity {
+public class PhotoActivity extends AppCompatActivity{
 
     public Button button;
     public ImageView imageView;
 
     public static final int REQUEST_IMAGE = 100;
     public static final int REQUEST_PERMISSION = 200;
-
-
+    private SimpleLocation mLocation;
     private String imageFilePath = "";
+    String currlatitude, currlongitude;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo);
-
         button = (Button) findViewById(R.id.button);
         imageView = findViewById(R.id.image);
+        mLocation = new SimpleLocation(this);
+
 
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                 currlatitude = Double.toString(mLocation.getLatitude());
+                 currlongitude = Double.toString(mLocation.getLongitude());
                 openCameraIntent();
             }
         });
+        {
+
+        }
 
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // make the device update its location
+        mLocation.beginUpdates();
+
+        // ...
+    }
+
+    @Override
+    protected void onPause() {
+        // stop location updates (saves battery)
+        mLocation.endUpdates();
+
+        // ...
+
+        super.onPause();
     }
 
     //opens camera
@@ -76,6 +108,12 @@ public class PhotoActivity extends AppCompatActivity {
             }
             Uri photoUri = FileProvider.getUriForFile(this, getPackageName() + ".provider", photoFile);
             pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+            try{
+                getDirectoryFiles(photoFile.getName());
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
             startActivityForResult(pictureIntent, REQUEST_IMAGE);
         }
     }
@@ -91,12 +129,6 @@ public class PhotoActivity extends AppCompatActivity {
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "Operation canceled", Toast.LENGTH_SHORT).show();
             }
-        }
-
-        try {
-            getDirectoryFiles();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -131,6 +163,7 @@ public class PhotoActivity extends AppCompatActivity {
 
 
     //pass from directory loop, get tags lat and long trim and convert from dms to degrees return string;
+    /*
     private String printImageTags(String file) throws Exception {
         Metadata metadata = ImageMetadataReader.readMetadata(new File(file));
         String lat = null;
@@ -188,35 +221,85 @@ public class PhotoActivity extends AppCompatActivity {
         }
 
         latlon = lonfinal+","+latfinal;
-        
+
 
         return latlon;
 
     }
+    */
 
 
     //iterates through all picture files, getting gps meta data and creating json file.
-    private void getDirectoryFiles() throws Exception {
+    private void getDirectoryFiles(String filename) throws Exception {
 
         String latlong = null;
-        String output = "{\"type\":\"FeatureCollection\",\"features\":[";
-
-        //loopthru each img file in folder get metadata, write to string in geojson format
-        File[] files = new File("/storage/emulated/0/Android/data/com.example.lifelogging/files/Pictures").listFiles();
-        //If this pathname does not denote a directory, then listFiles() returns null.
-        for (File file : files) {
-            if (file.isFile()) {
-                latlong = printImageTags(file.getAbsolutePath());
-                output += "{\"type\":\"Feature\",\"properties\":{\"name\":\""+file.getName()+"\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":["+latlong+"]}},";
-            }
-        }
-        output = output.substring(0, output.length()-1);
-        output += "]}";
+        String output = null;
 
         //writefile
-        try (FileWriter filew = new FileWriter("/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson")) {
-            filew.write(output);
-            Log.d("PhotoActivity", output); //testlog
+        File f = new File("/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson");
+        output = readFromFile();
+        Log.d("zzz", output.toString());
+
+        if(!f.exists())
+        {
+            output = "{\"type\":\"FeatureCollection\",\"features\":[";
+            try (FileWriter filew = new FileWriter("/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson")){
+                latlong = currlongitude+","+currlatitude;
+                output += "{\"type\":\"Feature\",\"properties\":{\"name\":\""+filename+"\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":["+latlong+"]}}";
+                output += "]}";
+                filew.write(output);
+                filew.close();
+                Log.d("PhotoActivity", output); //testlog
+            }
         }
+        else{
+               FileWriter filew = new FileWriter("/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson");
+                Log.d("zzz", output.toString()); //testlog
+
+                latlong = currlongitude+","+currlatitude;
+
+                output = output.substring(0, output.length()-2);
+
+                output += ",{\"type\":\"Feature\",\"properties\":{\"name\":\""+filename+"\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":["+latlong+"]}}";
+                output += "]}";
+
+                filew.write(output);
+                filew.close();
+        }
+
     }
+
+
+
+    private String readFromFile() {
+
+        String ret = "";
+
+        try {
+            FileInputStream fis = new FileInputStream(new File("/storage/emulated/0/Android/data/com.example.lifelogging/files/geo.geojson"));
+
+            if ( fis != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(fis);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString);
+                }
+
+                fis.close();
+                ret = stringBuilder.toString();
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+        Log.d("aaa", ret);
+        return ret;
+    }
+
+
 }
