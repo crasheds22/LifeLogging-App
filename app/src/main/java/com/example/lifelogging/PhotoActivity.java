@@ -146,6 +146,7 @@ public class PhotoActivity extends AppCompatActivity {
         for (Directory directory : metadata.getDirectories()) {
             for (Tag tag : directory.getTags()) {
                 String tagName = tag.getTagName();
+                Log.d("PhotoActivity", tagName);
                 String desc = tag.getDescription();
                 switch (tagName) {
                     case "GPS Latitude":
@@ -158,6 +159,7 @@ public class PhotoActivity extends AppCompatActivity {
             }
         }
         //strip unwanted data and convert.
+        /*
         Matcher m = r.matcher(lat);
         if (m.find( )) {
             latd = Double.parseDouble(m.group(3));
@@ -186,6 +188,7 @@ public class PhotoActivity extends AppCompatActivity {
         }
 
         latlon = lonfinal+","+latfinal;
+        */
 
         return latlon;
 
