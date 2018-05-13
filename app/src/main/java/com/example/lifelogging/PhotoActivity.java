@@ -159,7 +159,7 @@ public class PhotoActivity extends AppCompatActivity {
             }
         }
         //strip unwanted data and convert.
-        /*
+
         Matcher m = r.matcher(lat);
         if (m.find( )) {
             latd = Double.parseDouble(m.group(3));
@@ -188,7 +188,7 @@ public class PhotoActivity extends AppCompatActivity {
         }
 
         latlon = lonfinal+","+latfinal;
-        */
+        
 
         return latlon;
 
