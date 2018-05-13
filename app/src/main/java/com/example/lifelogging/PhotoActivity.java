@@ -92,6 +92,7 @@ public class PhotoActivity extends AppCompatActivity {
                 Toast.makeText(this, "Operation canceled", Toast.LENGTH_SHORT).show();
             }
         }
+
         try {
             getDirectoryFiles();
         } catch (Exception e) {
@@ -136,7 +137,7 @@ public class PhotoActivity extends AppCompatActivity {
         String lon = null;
         double latd, latm, lats;
         double lond, lonm, lons;
-        double latfinal = 0, lonfinal=0;
+        String latfinal="", lonfinal="";
         String latlon = null;
 
         String pattern = "^([NSEW])?(-)?(\\d+(?:\\.\\d+)?)[Â°Âº:d\\s]\\s?(?:(\\d+(?:\\.\\d+)?)['â€™â€˜â€²:]\\s?(?:(\\d{1,2}(?:\\.\\d+)?)(?:\"|â€³|â€™â€™|'')?)?)?\\s?([NSEW])?";
@@ -163,7 +164,11 @@ public class PhotoActivity extends AppCompatActivity {
             latm = Double.parseDouble(m.group(4));
             lats = Double.parseDouble(m.group(5));
 
-            latfinal = latd +((latm/60)+(lats/3600));
+            if (m.group(2) != null) {
+                latfinal = m.group(2) + Double.toString(latd + ((latm / 60) + (lats / 3600)));
+            }else{
+                latfinal = Double.toString(latd + ((latm / 60) + (lats / 3600)));
+            }
         }
 
         Matcher x = r.matcher(lon);
@@ -172,10 +177,15 @@ public class PhotoActivity extends AppCompatActivity {
             lonm = Double.parseDouble(x.group(4));
             lons = Double.parseDouble(x.group(5));
 
-            lonfinal = lond +((lonm/60)+(lons/3600));
+            if (x.group(2) != null) {
+                lonfinal = x.group(2)+Double.toString((lond +((lonm/60)+(lons/3600))));
+            }else{
+                lonfinal = Double.toString((lond +((lonm/60)+(lons/3600))));
+            }
+
         }
 
-        latlon = Double.toString(latfinal) +","+ Double.toString(lonfinal);
+        latlon = lonfinal+","+latfinal;
 
         return latlon;
 

@@ -68,14 +68,17 @@ public class ViewOnMapActivity extends AppCompatActivity
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
             String str = readFromFile();
+            Log.d("teststr", str.toString());
             JSONObject js = null;
             try {
                 js = new JSONObject(str);
+                Log.d("teststr", js.toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
             retrieveFileFromResource(js);
+            Log.d("teststr", js.toString());
 
         }
     }
@@ -217,7 +220,7 @@ public class ViewOnMapActivity extends AppCompatActivity
             @Override
             public void onFeatureClick(Feature feature) {
                 Toast.makeText(ViewOnMapActivity.this,
-                        "Feature clicked: " + feature.getProperty("title"),
+                        "Feature clicked: " + feature.getProperty("name"),
                         Toast.LENGTH_SHORT).show();
             }
 
